@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root{
+      --card:#f7f7f7;
+      --card2:#ffffff;
+      --text:#1f2328;
+      --muted:#6b7280;
+      --border: rgba(0,0,0,0.08);
+      --chipbg: rgba(255,255,255,0.7);
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --card:#111827;
+        --card2:#0b1220;
+        --text:#e5e7eb;
+        --muted:#9ca3af;
+        --border: rgba(255,255,255,0.12);
+        --chipbg: rgba(0,0,0,0.35);
+      }
+    }
+
+    html[data-theme="light"]{
+      --card:#f7f7f7;
+      --card2:#ffffff;
+      --text:#1f2328;
+      --muted:#6b7280;
+      --border: rgba(0,0,0,0.08);
+      --chipbg: rgba(255,255,255,0.7);
+    }
+    html[data-theme="dark"]{
+      --card:#111827;
+      --card2:#0b1220;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border: rgba(255,255,255,0.12);
+      --chipbg: rgba(0,0,0,0.35);
+    }
+
+    body{
+      margin:0;
+      padding:10px 12px 12px;
+      background: transparent;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:flex-start;
+      gap:8px;
+      margin-bottom: 8px;
+    }
+
+    .btn{
+      appearance:none;
+      border: 1px solid var(--border);
+      background: var(--chipbg);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+      white-space: nowrap;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .card{
+      background: var(--card);
+      border-radius: 10px;
+      padding: 10px 10px 8px;
+      border: 1px solid var(--border);
+      min-width: 0;
+    }
+
+    .city{
+      font-weight: 600;
+      font-size: clamp(11px, 1.3vw, 14px);
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meta{
+      margin-top: 2px;
+      font-size: clamp(10px, 1.1vw, 12px);
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timeRow{
+      margin-top: 10px;
+      display:flex;
+      align-items:baseline;
+      gap:6px;
+      font-variant-numeric: tabular-nums;
+      min-width: 0;
+    }
+
+    .time{
+      font-size: clamp(16px, 2.3vw, 30px);
+      font-weight: 700;
+      letter-spacing: .2px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .ampm{
+      font-size: clamp(9px, 1.1vw, 11px);
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .date{
+      margin-top: 6px;
+      font-size: clamp(9px, 1.0vw, 12px);
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 560px){
+      .date{ display:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <button class="btn" id="timeModeBtn" type="button">24H</button>
+    <button class="btn" id="themeBtn" type="button">Auto</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const CLOCKS = [
+      { city: "Los Angeles", country: "USA",   tz: "America/Los_Angeles" },
+      { city: "New York",    country: "USA",   tz: "America/New_York" },
+      { city: "London",      country: "UK",    tz: "Europe/London" },
+      { city: "Shanghai",    country: "China", tz: "Asia/Shanghai" },
+      { city: "Tokyo",       country: "Japan", tz: "Asia/Tokyo" },
+    ];
+
+    const grid = document.getElementById("grid");
+    const timeModeBtn = document.getElementById("timeModeBtn");
+    const themeBtn = document.getElementById("themeBtn");
+
+    const KEY_HOUR12 = "wc_hour12";
+    const KEY_THEME  = "wc_theme"; // auto | light | dark
+
+    let hour12 = (localStorage.getItem(KEY_HOUR12) ?? "false") === "true";
+    let theme  = localStorage.getItem(KEY_THEME) ?? "auto";
+
+    function applyTheme(){
+      if (theme === "auto"){
+        document.documentElement.removeAttribute("data-theme");
+        themeBtn.textContent = "Auto";
+      } else {
+        document.documentElement.setAttribute("data-theme", theme);
+        themeBtn.textContent = theme === "dark" ? "Dark" : "Light";
+      }
+    }
+    function cycleTheme(){
+      theme = theme === "auto" ? "dark" : theme === "dark" ? "light" : "auto";
+      localStorage.setItem(KEY_THEME, theme);
+      applyTheme();
+    }
+
+    function updateTimeModeBtn(){
+      timeModeBtn.textContent = hour12 ? "AM/PM" : "24H";
+    }
+
+    function format(tz){
+      const dtf = new Intl.DateTimeFormat("en-GB", {
+        timeZone: tz,
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12
+      });
+
+      const parts = dtf.formatToParts(new Date());
+      const map = {};
+      parts.forEach(p => map[p.type] = p.value);
+
+      return {
+        time: `${map.hour}:${map.minute}:${map.second}`,
+        ampm: (map.dayPeriod || "").toUpperCase(),
+        date: `${map.weekday}, ${map.day} ${map.month} ${map.year}`
+      };
+    }
+
+    function render(){
+      grid.innerHTML = "";
+      for (const c of CLOCKS){
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.tz = c.tz;
+        card.innerHTML = `
+          <div class="city">${c.city}</div>
+          <div class="meta">${c.country}</div>
+          <div class="timeRow">
+            <div class="time">--:--:--</div>
+            <div class="ampm" style="display:none;"></div>
+          </div>
+          <div class="date">---</div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    function tick(){
+      grid.querySelectorAll(".card").forEach(card => {
+        const { time, ampm, date } = format(card.dataset.tz);
+        card.querySelector(".time").textContent = time;
+
+        const ampmEl = card.querySelector(".ampm");
+        if (hour12){
+          ampmEl.style.display = "inline";
+          ampmEl.textContent = ampm;
+        } else {
+          ampmEl.style.display = "none";
+          ampmEl.textContent = "";
+        }
+
+        card.querySelector(".date").textContent = date;
+      });
+    }
+
+    timeModeBtn.addEventListener("click", () => {
+      hour12 = !hour12;
+      localStorage.setItem(KEY_HOUR12, String(hour12));
+      updateTimeModeBtn();
+      tick();
+    });
+
+    themeBtn.addEventListener("click", cycleTheme);
+
+    updateTimeModeBtn();
+    applyTheme();
+    render();
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
