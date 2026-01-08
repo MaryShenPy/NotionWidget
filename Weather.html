@@ -1,9 +1,25 @@
-<iframe
-  src="https://www.yr.no/en/content/2-1796236/meteogram.svg"
-  style="
-    width: 100%;
-    aspect-ratio: 2.2 / 1;
-    border: 0;
-    border-radius: 8px;
-  ">
-</iframe>
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body { margin: 0; padding: 0; background: transparent; }
+    #wrap {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden; /* 圆角裁切 */
+    }
+    img { width: 100%; height: auto; display: block; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <img id="m" alt="meteogram">
+  </div>
+
+  <script>
+    const base = "https://www.yr.no/en/content/2-1796236/meteogram.svg";
+    document.getElementById("m").src = base + "?v=" + Date.now();
+  </script>
+</body>
+</html>
