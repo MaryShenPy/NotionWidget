@@ -3,17 +3,33 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    html, body { margin: 0; padding: 0; background: transparent; }
-    #wrap {
-      width: 100%;
-      border-radius: 8px;
-      overflow: hidden; /* 圆角裁切 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      height: 100%;
     }
-    img { width: 100%; height: auto; display: block; }
+
+    .ratio {
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      overflow: hidden;
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .ratio img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <div id="wrap">
+  <div class="ratio">
     <img id="m" alt="meteogram">
   </div>
 
